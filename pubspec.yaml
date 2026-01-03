@@ -1,0 +1,142 @@
+name: crop_diagnostic
+description: AI-Powered Crop Diagnostic Mobile Application with WhatsApp-like chat interface
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  provider: ^6.1.1
+  riverpod: ^2.4.9
+  
+  # UI Components
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.0
+  image_picker: ^1.0.5
+  photo_view: ^0.14.0
+  flutter_animate: ^4.3.0
+  lottie: ^2.7.0
+  
+  # Chat & Messaging
+  chat_bubbles: ^1.5.0
+  flutter_chat_ui: ^1.6.10
+  grouped_list: ^5.1.2
+  
+  # AI & ML
+  tflite_flutter: ^0.10.4
+  camera: ^0.10.5+5
+  image: ^4.1.3
+  
+  # Storage & Database
+  sqflite: ^2.3.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.1
+  shared_preferences: ^2.2.2
+  
+  # Networking
+  http: ^1.1.2
+  dio: ^5.4.0
+  connectivity_plus: ^5.0.2
+  
+  # Location & Maps
+  geolocator: ^10.1.0
+  geocoding: ^2.1.1
+  google_maps_flutter: ^2.5.0
+  flutter_map: ^6.1.0
+  
+  # Voice & Audio
+  speech_to_text: ^6.5.1
+  flutter_tts: ^3.8.5
+  record: ^5.0.4
+  audioplayers: ^5.2.1
+  
+  # Localization
+  flutter_localizations:
+    sdk: flutter
+  
+  # Authentication & Security
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  google_sign_in: ^6.2.1
+  local_auth: ^2.1.8
+  
+  # Analytics & Monitoring
+  firebase_analytics: ^10.8.0
+  firebase_crashlytics: ^3.4.8
+  
+  # Notifications
+  firebase_messaging: ^14.7.9
+  flutter_local_notifications: ^16.3.0
+  
+  # File Management
+  file_picker: ^6.1.1
+  path: ^1.8.3
+  permission_handler: ^11.1.0
+  
+  # Weather API
+  weather: ^3.1.1
+  
+  # QR Code
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^3.5.5
+  
+  # Payment Integration - Removed due to dependency conflict
+  # Will add alternative payment solution later
+  # mpesa_flutter_plugin: ^1.4.0
+  
+  # Charts & Analytics
+  fl_chart: ^0.65.0
+  syncfusion_flutter_charts: ^24.1.41
+  
+  # Utils
+  uuid: ^4.2.2
+  timeago: ^3.6.0
+  url_launcher: ^6.2.2
+  share_plus: ^7.2.1
+  package_info_plus: ^5.0.1
+  device_info_plus: ^9.1.1
+  
+  # UI Enhancement
+  shimmer: ^3.0.0
+  pull_to_refresh: ^2.0.0
+  flutter_staggered_grid_view: ^0.7.0
+  badges: ^3.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+  
+  # Assets
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
+    - assets/models/
+    - assets/data/
+    - assets/audio/
+    
+  # Fonts
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
+    - family: Lato
+      fonts:
+        - asset: assets/fonts/Lato-Regular.ttf
+        - asset: assets/fonts/Lato-Bold.ttf
+          weight: 700
