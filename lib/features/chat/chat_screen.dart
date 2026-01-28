@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:geolocator/geolocator.dart';
 import 'dart:io';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/services/ai_service.dart';
 import '../../data/models/message_model.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/chat_input.dart';
@@ -32,11 +34,14 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<String> _attachedImages = [];
   final List<String> _attachedAudioFiles = [];
   final List<String> _attachedFiles = [];
+  final AIService _aiService = AIService();
+  String? _currentLocation;
   
   @override
   void initState() {
     super.initState();
     _loadInitialMessages();
+    _getCurrentLocation();
   }
   
   void _loadInitialMessages() {
@@ -45,13 +50,35 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.add(
         Message(
           id: '1',
-          text: 'Hello! I\'m your AI farming assistant. How can I help you today? You can:\n\n📸 Send a photo of your crop\n💬 Ask farming questions\n🌤️ Check weather forecasts\n💰 View market prices',
+          text: 'Hello! I\'m your AI farming assistant. I can help you with:\n\n📸 Crop disease diagnosis from photos\n🐛 Pest identification and control\n🌱 Plant health assessment\n💚 Organic farming solutions\n📍 Location-specific advice\n\nHow can I help you today?',
           isUser: false,
           timestamp: DateTime.now(),
           messageType: MessageType.text,
         ),
       );
     });
+  }
+  
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+
+      if (permission == LocationPermission.deniedForever) return;
+
+      Position position = await Geolocator.getCurrentPosition();
+      setState(() {
+        _currentLocation = '${position.latitude}, ${position.longitude}';
+      });
+    } catch (e) {
+      // Location is optional, continue without it
+    }
   }
   
   void _scrollToBottom() {
@@ -64,24 +91,28 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
   
-  void _sendMessage(String text) {
+  void _sendMessage(String text) async {
     // Only send if there's text or attachments
     if (text.trim().isEmpty && _attachedImages.isEmpty && _attachedAudioFiles.isEmpty && _attachedFiles.isEmpty) return;
     
+    // Create user message
+    final userMessage = Message(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      text: text.trim(),
+      isUser: true,
+      timestamp: DateTime.now(),
+      messageType: _attachedImages.isNotEmpty ? MessageType.image : MessageType.text,
+      imageUrl: _attachedImages.isNotEmpty ? _attachedImages.first : null,
+      attachedImages: List.from(_attachedImages),
+      attachedAudioFiles: List.from(_attachedAudioFiles),
+      attachedFiles: List.from(_attachedFiles),
+    );
+
+    // Save image paths before clearing
+    final imagePaths = List<String>.from(_attachedImages);
+    
     setState(() {
-      _messages.add(
-        Message(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          text: text.trim(),
-          isUser: true,
-          timestamp: DateTime.now(),
-          messageType: _attachedImages.isNotEmpty ? MessageType.image : MessageType.text,
-          imageUrl: _attachedImages.isNotEmpty ? _attachedImages.first : null,
-          attachedImages: List.from(_attachedImages),
-          attachedAudioFiles: List.from(_attachedAudioFiles),
-          attachedFiles: List.from(_attachedFiles),
-        ),
-      );
+      _messages.add(userMessage);
       _isTyping = true;
       // Clear all inputs
       _attachedImages.clear();
@@ -92,16 +123,21 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.clear();
     _scrollToBottom();
     
-    // Simulate AI response
-    Future.delayed(const Duration(seconds: 2), () {
+    // Get AI response
+    try {
+      final response = await _aiService.generateResponse(
+        userMessage: text.trim().isNotEmpty ? text.trim() : 'Please analyze this image.',
+        conversationHistory: _messages,
+        imagePaths: imagePaths.isNotEmpty ? imagePaths : null,
+        location: _currentLocation,
+      );
+
       if (mounted) {
         setState(() {
           _messages.add(
             Message(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
-              text: _attachedImages.isNotEmpty 
-                  ? 'I received your message with attachments. Let me analyze that for you...'
-                  : 'I understand you\'re asking about "$text". Let me help you with that...',
+              text: response,
               isUser: false,
               timestamp: DateTime.now(),
               messageType: MessageType.text,
@@ -111,7 +147,23 @@ class _ChatScreenState extends State<ChatScreen> {
         });
         _scrollToBottom();
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add(
+            Message(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              text: 'Sorry, I encountered an error processing your request. Please try again.',
+              isUser: false,
+              timestamp: DateTime.now(),
+              messageType: MessageType.text,
+            ),
+          );
+          _isTyping = false;
+        });
+        _scrollToBottom();
+      }
+    }
   }
   
   Future<void> _pickImage(ImageSource source) async {
