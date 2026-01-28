@@ -251,7 +251,7 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             CircleAvatar(
               backgroundColor: Colors.white,
-              child: Icon(Icons.smart_toy, color: AppTheme.primaryColor),
+              child: Icon(Icons.agriculture, color: AppTheme.primaryColor),
             ),
              SizedBox(width: 12),
              Expanded(
@@ -259,12 +259,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'agridoc',
+                    'Farming AI Assistant',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'Online',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                    'Organic solutions first',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.normal, color: Colors.green),
                   ),
                 ],
               ),
