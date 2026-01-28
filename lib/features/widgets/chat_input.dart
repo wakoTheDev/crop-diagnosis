@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io';
 import '../../core/theme/app_theme.dart';
 
 class ChatInput extends StatelessWidget {
   final TextEditingController controller;
   final Function(String) onSend;
   final VoidCallback onImagePressed;
+  final VoidCallback onCameraPressed;
   final VoidCallback onVoicePressed;
+  final List<String> attachedImages;
+  final List<String> attachedAudioFiles;
+  final List<String> attachedFiles;
+  final Function(int)? onRemoveImage;
+  final Function(int)? onRemoveAudio;
+  final Function(int)? onRemoveFile;
   
   const ChatInput({
     super.key,
     required this.controller,
     required this.onSend,
     required this.onImagePressed,
+    required this.onCameraPressed,
     required this.onVoicePressed,
+    required this.attachedImages,
+    required this.attachedAudioFiles,
+    required this.attachedFiles,
+    this.onRemoveImage,
+    this.onRemoveAudio,
+    this.onRemoveFile,
   });
 
   @override
@@ -31,13 +47,100 @@ class ChatInput extends StatelessWidget {
         ],
       ),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Attachments preview
+            if (attachedImages.isNotEmpty || attachedAudioFiles.isNotEmpty || attachedFiles.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(maxHeight: 150),
+                decoration: BoxDecoration(
+                  color: AppTheme.backgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Images
+                      if (attachedImages.isNotEmpty) ...[
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: attachedImages.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final imagePath = entry.value;
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: kIsWeb
+                                      ? Image.network(imagePath, width: 60, height: 60, fit: BoxFit.cover)
+                                      : Image.file(File(imagePath), width: 60, height: 60, fit: BoxFit.cover),
+                                ),
+                                Positioned(
+                                  top: -6,
+                                  right: -6,
+                                  child: GestureDetector(
+                                    onTap: () => onRemoveImage?.call(index),
+                                    child: Container(
+                                      decoration: const BoxDecoration(color: AppTheme.errorColor, shape: BoxShape.circle),
+                                      child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                      // Audio files
+                      if (attachedAudioFiles.isNotEmpty) ...[
+                        if (attachedImages.isNotEmpty) const SizedBox(height: 8),
+                        ...attachedAudioFiles.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 4),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.mic, color: Colors.orange, size: 20),
+                                const SizedBox(width: 8),
+                                const Expanded(child: Text('Voice message', style: TextStyle(fontSize: 13))),
+                                GestureDetector(
+                                  onTap: () => onRemoveAudio?.call(index),
+                                  child: const Icon(Icons.close, size: 18),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            // Input row
+            Row(
           children: [
             IconButton(
               icon: const Icon(Icons.add_circle_outline, color: AppTheme.primaryColor),
               onPressed: () {
                 _showAttachmentOptions(context);
               },
+            ),
+            IconButton(
+              icon: const Icon(Icons.camera_alt, color: AppTheme.primaryColor),
+              onPressed: onCameraPressed,
+              tooltip: 'Take photo or choose from gallery',
             ),
             Expanded(
               child: TextField(
@@ -73,12 +176,18 @@ class ChatInput extends StatelessWidget {
               child: IconButton(
                 icon: const Icon(Icons.send, color: Colors.white),
                 onPressed: () {
-                  if (controller.text.trim().isNotEmpty) {
+                  // Send message with all attachments
+                  if (controller.text.trim().isNotEmpty || 
+                      attachedImages.isNotEmpty || 
+                      attachedAudioFiles.isNotEmpty || 
+                      attachedFiles.isNotEmpty) {
                     onSend(controller.text);
                   }
                 },
               ),
             ),
+          ],
+        ),
           ],
         ),
       ),
@@ -105,15 +214,31 @@ class ChatInput extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                spacing: 16,
+                runSpacing: 16,
                 children: [
                   _buildAttachmentOption(
                     context,
                     Icons.camera_alt,
                     'Camera',
                     AppTheme.primaryColor,
+                    onCameraPressed,
+                  ),
+                  _buildAttachmentOption(
+                    context,
+                    Icons.photo_library,
+                    'Gallery',
+                    Colors.purple,
                     onImagePressed,
+                  ),
+                  _buildAttachmentOption(
+                    context,
+                    Icons.mic,
+                    'Voice',
+                    Colors.orange,
+                    onVoicePressed,
                   ),
                   _buildAttachmentOption(
                     context,
@@ -133,6 +258,18 @@ class ChatInput extends StatelessWidget {
                     () {
                       Navigator.pop(context);
                       _shareContact(context);
+                    },
+                  ),
+                  _buildAttachmentOption(
+                    context,
+                    Icons.insert_drive_file,
+                    'File',
+                    Colors.teal,
+                    () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('File sharing coming soon!')),
+                      );
                     },
                   ),
                 ],

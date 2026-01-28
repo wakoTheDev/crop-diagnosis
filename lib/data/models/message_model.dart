@@ -14,6 +14,9 @@ class Message {
   final String? imageUrl;
   final String? voiceUrl;
   final bool synced;
+  final List<String> attachedImages;
+  final List<String> attachedAudioFiles;
+  final List<String> attachedFiles;
   
   Message({
     required this.id,
@@ -24,7 +27,12 @@ class Message {
     this.imageUrl,
     this.voiceUrl,
     this.synced = false,
-  });
+    List<String>? attachedImages,
+    List<String>? attachedAudioFiles,
+    List<String>? attachedFiles,
+  })  : attachedImages = attachedImages ?? [],
+        attachedAudioFiles = attachedAudioFiles ?? [],
+        attachedFiles = attachedFiles ?? [];
   
   Map<String, dynamic> toJson() {
     return {
@@ -36,6 +44,9 @@ class Message {
       'image_url': imageUrl,
       'voice_url': voiceUrl,
       'synced': synced ? 1 : 0,
+      'attached_images': attachedImages,
+      'attached_audio_files': attachedAudioFiles,
+      'attached_files': attachedFiles,
     };
   }
   
@@ -51,6 +62,15 @@ class Message {
       imageUrl: json['image_url'],
       voiceUrl: json['voice_url'],
       synced: json['synced'] == 1,
+      attachedImages: json['attached_images'] != null 
+          ? List<String>.from(json['attached_images']) 
+          : null,
+      attachedAudioFiles: json['attached_audio_files'] != null 
+          ? List<String>.from(json['attached_audio_files']) 
+          : null,
+      attachedFiles: json['attached_files'] != null 
+          ? List<String>.from(json['attached_files']) 
+          : null,
     );
   }
 }

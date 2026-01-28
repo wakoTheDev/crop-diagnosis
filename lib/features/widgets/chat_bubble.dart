@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 import '../../data/models/message_model.dart';
 import '../../core/theme/app_theme.dart';
@@ -67,12 +68,16 @@ class ChatBubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (message.messageType == MessageType.image && 
-                          message.imageUrl != null)
-                        _buildImageContent(),
-                      if (isTyping)
-                        _buildTypingIndicator()
-                      else
+                      // Display all attached images
+                      if (message.attachedImages.isNotEmpty)
+                        _buildAttachedImages(),
+                      // Display all attached audio files
+                      if (message.attachedAudioFiles.isNotEmpty)
+                        _buildAttachedAudio(),
+                      // Display text if present
+                      if (!isTyping && message.text.isNotEmpty) ...[
+                        if (message.attachedImages.isNotEmpty || message.attachedAudioFiles.isNotEmpty)
+                          const SizedBox(height: 8),
                         Text(
                           message.text,
                           style: const TextStyle(
@@ -81,6 +86,9 @@ class ChatBubble extends StatelessWidget {
                             height: 1.4,
                           ),
                         ),
+                      ],
+                      if (isTyping)
+                        _buildTypingIndicator(),
                     ],
                   ),
                 ),
@@ -113,24 +121,129 @@ class ChatBubble extends StatelessWidget {
   
   Widget _buildImageContent() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.file(
-            File(message.imageUrl!),
-            width: 200,
-            height: 200,
-            fit: BoxFit.cover,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 250,
+              maxHeight: 250,
+            ),
+            child: kIsWeb
+                ? Image.network(
+                    message.imageUrl!,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        width: 250,
+                        height: 250,
+                        color: Colors.grey[200],
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 250,
+                        height: 200,
+                        color: Colors.grey[300],
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                            SizedBox(height: 8),
+                            Text('Image failed to load', style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      );
+                    },
+                  )
+                : Image.file(
+                    File(message.imageUrl!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 250,
+                        height: 200,
+                        color: Colors.grey[300],
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                            SizedBox(height: 8),
+                            Text('Image failed to load', style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
         ),
-        if (message.text.isNotEmpty) ...[
+        if (message.text.isNotEmpty && message.text != 'Image sent for diagnosis') ...[
           const SizedBox(height: 8),
           Text(
             message.text,
-            style: const TextStyle(fontSize: 15),
+            style: const TextStyle(
+              fontSize: 15,
+              color: AppTheme.textPrimary,
+              height: 1.4,
+            ),
           ),
         ],
       ],
+    );
+  }
+  
+  Widget _buildAttachedImages() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: message.attachedImages.map((imagePath) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 200,
+              maxHeight: 200,
+            ),
+            child: kIsWeb
+                ? Image.network(imagePath, fit: BoxFit.cover)
+                : Image.file(File(imagePath), fit: BoxFit.cover),
+          ),
+        );
+      }).toList(),
+    );
+  }
+  
+  Widget _buildAttachedAudio() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: message.attachedAudioFiles.map((audioPath) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.mic, color: Colors.orange, size: 18),
+              SizedBox(width: 8),
+              Text('Voice message', style: TextStyle(fontSize: 13)),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
   
@@ -157,7 +270,7 @@ class ChatBubble extends StatelessWidget {
           child: Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppTheme.textHint,
               shape: BoxShape.circle,
             ),

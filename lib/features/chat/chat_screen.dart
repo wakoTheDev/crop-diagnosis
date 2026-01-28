@@ -9,6 +9,9 @@ import '../../data/models/message_model.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/chat_input.dart';
 import '../home/home_screen.dart';
+import '../market/market_screen.dart';
+import '../community/community_screen.dart';
+import '../profile/profile_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -26,6 +29,9 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<Message> _messages = [];
   bool _isTyping = false;
   bool _isRecording = false;
+  final List<String> _attachedImages = [];
+  final List<String> _attachedAudioFiles = [];
+  final List<String> _attachedFiles = [];
   
   @override
   void initState() {
@@ -59,19 +65,28 @@ class _ChatScreenState extends State<ChatScreen> {
   }
   
   void _sendMessage(String text) {
-    if (text.trim().isEmpty) return;
+    // Only send if there's text or attachments
+    if (text.trim().isEmpty && _attachedImages.isEmpty && _attachedAudioFiles.isEmpty && _attachedFiles.isEmpty) return;
     
     setState(() {
       _messages.add(
         Message(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
-          text: text,
+          text: text.trim(),
           isUser: true,
           timestamp: DateTime.now(),
-          messageType: MessageType.text,
+          messageType: _attachedImages.isNotEmpty ? MessageType.image : MessageType.text,
+          imageUrl: _attachedImages.isNotEmpty ? _attachedImages.first : null,
+          attachedImages: List.from(_attachedImages),
+          attachedAudioFiles: List.from(_attachedAudioFiles),
+          attachedFiles: List.from(_attachedFiles),
         ),
       );
       _isTyping = true;
+      // Clear all inputs
+      _attachedImages.clear();
+      _attachedAudioFiles.clear();
+      _attachedFiles.clear();
     });
     
     _messageController.clear();
@@ -84,7 +99,9 @@ class _ChatScreenState extends State<ChatScreen> {
           _messages.add(
             Message(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
-              text: 'I understand you\'re asking about "$text". Let me help you with that...',
+              text: _attachedImages.isNotEmpty 
+                  ? 'I received your message with attachments. Let me analyze that for you...'
+                  : 'I understand you\'re asking about "$text". Let me help you with that...',
               isUser: false,
               timestamp: DateTime.now(),
               messageType: MessageType.text,
@@ -108,46 +125,7 @@ class _ChatScreenState extends State<ChatScreen> {
       
       if (image != null) {
         setState(() {
-          _messages.add(
-            Message(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              text: 'Image sent for diagnosis',
-              isUser: true,
-              timestamp: DateTime.now(),
-              messageType: MessageType.image,
-              imageUrl: image.path,
-            ),
-          );
-          _isTyping = true;
-        });
-        
-        _scrollToBottom();
-        
-        // Simulate diagnosis
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) {
-            setState(() {
-              _messages.add(
-                Message(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  text: '🔍 Analysis Complete!\n\n'
-                      'Disease: Early Blight\n'
-                      'Confidence: 92%\n'
-                      'Severity: Medium\n\n'
-                      '💊 Treatment:\n'
-                      '1. Remove affected leaves\n'
-                      '2. Apply fungicide (Copper-based)\n'
-                      '3. Improve air circulation\n\n'
-                      'Would you like more details?',
-                  isUser: false,
-                  timestamp: DateTime.now(),
-                  messageType: MessageType.text,
-                ),
-              );
-              _isTyping = false;
-            });
-            _scrollToBottom();
-          }
+          _attachedImages.add(image.path);
         });
       }
     } catch (e) {
@@ -157,6 +135,24 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     }
+  }
+  
+  void _removeAttachedImage(int index) {
+    setState(() {
+      _attachedImages.removeAt(index);
+    });
+  }
+  
+  void _removeAttachedAudio(int index) {
+    setState(() {
+      _attachedAudioFiles.removeAt(index);
+    });
+  }
+  
+  void _removeAttachedFile(int index) {
+    setState(() {
+      _attachedFiles.removeAt(index);
+    });
   }
   
   void _showImageSourceDialog() {
@@ -211,7 +207,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'AI Assistant',
+                    'agridoc',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -317,8 +313,15 @@ class _ChatScreenState extends State<ChatScreen> {
           ChatInput(
             controller: _messageController,
             onSend: _sendMessage,
-            onImagePressed: _showImageSourceDialog,
+            onImagePressed: () => _pickImage(ImageSource.gallery),
+            onCameraPressed: _showImageSourceDialog,
             onVoicePressed: _isRecording ? _stopRecording : _startRecording,
+            attachedImages: _attachedImages,
+            attachedAudioFiles: _attachedAudioFiles,
+            attachedFiles: _attachedFiles,
+            onRemoveImage: _removeAttachedImage,
+            onRemoveAudio: _removeAttachedAudio,
+            onRemoveFile: _removeAttachedFile,
           ),
         ],
       ),
@@ -385,50 +388,15 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       
       if (path != null && File(path).existsSync()) {
-        final file = File(path);
-        final fileSize = await file.length();
-        final fileSizeKB = (fileSize / 1024).toStringAsFixed(1);
-        
-        // Add voice message to chat
         setState(() {
-          _messages.add(
-            Message(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              text: '🎤 Voice message ($fileSizeKB KB)',
-              isUser: true,
-              timestamp: DateTime.now(),
-              messageType: MessageType.text,
-            ),
-          );
-          _isTyping = true;
-        });
-        
-        _scrollToBottom();
-        
-        // Simulate AI response for voice message
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            setState(() {
-              _messages.add(
-                Message(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  text: '🎧 I received your voice message. Voice transcription will be available soon!',
-                  isUser: false,
-                  timestamp: DateTime.now(),
-                  messageType: MessageType.text,
-                ),
-              );
-              _isTyping = false;
-            });
-            _scrollToBottom();
-          }
+          _attachedAudioFiles.add(path);
         });
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('✅ Voice message sent'),
-              duration: Duration(seconds: 1),
+              content: Text('✅ Audio recorded. Click send to share'),
+              duration: Duration(seconds: 2),
               backgroundColor: AppTheme.successColor,
             ),
           );

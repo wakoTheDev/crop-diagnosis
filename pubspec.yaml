@@ -54,7 +54,7 @@ dependencies:
   # Voice & Audio
   speech_to_text: ^6.5.1
   flutter_tts: ^3.8.5
-  record: ^5.0.4
+  record: ^6.1.2
   audioplayers: ^5.2.1
   
   # Localization
@@ -62,17 +62,17 @@ dependencies:
     sdk: flutter
   
   # Authentication & Security
-  firebase_core: ^2.24.2
-  firebase_auth: ^4.15.3
+  firebase_core: ^4.4.0
+  firebase_auth: ^6.1.4
   google_sign_in: ^6.2.1
   local_auth: ^2.1.8
   
   # Analytics & Monitoring
-  firebase_analytics: ^10.8.0
-  firebase_crashlytics: ^3.4.8
+  firebase_analytics: ^12.1.1
+  firebase_crashlytics: ^5.0.7
   
   # Notifications
-  firebase_messaging: ^14.7.9
+  firebase_messaging: ^16.1.1
   flutter_local_notifications: ^16.3.0
   
   # File Management
@@ -100,7 +100,7 @@ dependencies:
   timeago: ^3.6.0
   url_launcher: ^6.2.2
   share_plus: ^7.2.1
-  package_info_plus: ^5.0.1
+  package_info_plus: ^9.0.0
   device_info_plus: ^9.1.1
   
   # UI Enhancement

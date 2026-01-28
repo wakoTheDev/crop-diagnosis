@@ -4,6 +4,7 @@ import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/authentication/screens/login_screen.dart';
 import '../../features/authentication/screens/signup_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/market/market_screen.dart';
 
 class NavigationService {
   static final GlobalKey<NavigatorState> navigatorKey = 
@@ -45,6 +46,10 @@ class NavigationService {
       case '/home':
         return MaterialPageRoute(
           builder: (_) => const HomeScreen(),
+        );
+      case '/market':
+        return MaterialPageRoute(
+          builder: (_) => const MarketScreen(),
         );
       default:
         return MaterialPageRoute(
