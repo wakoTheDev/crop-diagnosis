@@ -201,6 +201,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             // Product Name
             TextFormField(
               controller: _nameController,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
               decoration: InputDecoration(
                 labelText: 'Product Name',
                 hintText: 'e.g., Hybrid Maize Seeds',
@@ -221,6 +222,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             // Category Dropdown
             DropdownButtonFormField<String>(
               value: _selectedCategory,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
               decoration: InputDecoration(
                 labelText: 'Category',
                 prefixIcon: const Icon(Icons.category),
@@ -249,6 +251,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             // Price
             TextFormField(
               controller: _priceController,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
               decoration: InputDecoration(
                 labelText: 'Price (KSh)',
                 hintText: '0.00',
@@ -273,6 +276,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             // Stock
             TextFormField(
               controller: _stockController,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
               decoration: InputDecoration(
                 labelText: 'Stock Quantity',
                 hintText: '0',
@@ -297,6 +301,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             // Description
             TextFormField(
               controller: _descriptionController,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
               decoration: InputDecoration(
                 labelText: 'Description',
                 hintText: 'Describe your product...',
@@ -322,6 +327,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             // Tags
             TextFormField(
               controller: _tagsController,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
               decoration: InputDecoration(
                 labelText: 'Tags (comma separated)',
                 hintText: 'organic, seeds, high-yield',

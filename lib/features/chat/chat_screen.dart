@@ -274,13 +274,20 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: AppTheme.chatBackground,
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           children: [
             CircleAvatar(
               backgroundColor: Colors.white,
-              child: Icon(Icons.agriculture, color: AppTheme.primaryColor),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/icons/app_logo.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
-             SizedBox(width: 12),
+            const SizedBox(width: 12),
              Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,13 +381,16 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const CircleAvatar(
+                          CircleAvatar(
                             radius: 50,
                             backgroundColor: AppTheme.primaryLight,
-                            child: Icon(
-                              Icons.agriculture,
-                              size: 50,
-                              color: AppTheme.primaryColor,
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/icons/app_logo.png',
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 22),
