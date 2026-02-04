@@ -147,6 +147,10 @@ class ChatInput extends StatelessWidget {
                 controller: controller,
                 maxLines: null,
                 textCapitalization: TextCapitalization.sentences,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
                 decoration: InputDecoration(
                   hintText: 'Type a message...',
                   hintStyle: const TextStyle(color: AppTheme.textHint),
