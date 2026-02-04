@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../providers/user_provider.dart';
@@ -42,7 +41,7 @@ class ProfileScreen extends StatelessWidget {
               // Profile Header
               Container(
                 padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -86,7 +85,7 @@ class ProfileScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -231,7 +230,7 @@ class ProfileScreen extends StatelessWidget {
                       title: const Text('Help & Support'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
-                        // TODO: Implement help
+                        _showHelpDialog(context);
                       },
                     ),
                     const Divider(height: 1),
@@ -256,6 +255,80 @@ class ProfileScreen extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+
+  void _showHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Help & Support'),
+        content: const SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'How to Use Crop Diagnostic',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 12),
+              _HelpItem(
+                icon: Icons.chat,
+                title: 'AI Diagnosis',
+                description: 'Take a photo of your crop and chat with AI to get instant diagnosis and treatment recommendations.',
+              ),
+              SizedBox(height: 8),
+              _HelpItem(
+                icon: Icons.groups,
+                title: 'Communities',
+                description: 'Join communities to connect with other farmers, share experiences, and get advice.',
+              ),
+              SizedBox(height: 8),
+              _HelpItem(
+                icon: Icons.shopping_bag,
+                title: 'Marketplace',
+                description: 'Buy and sell agricultural products. Browse listings or add your own products.',
+              ),
+              SizedBox(height: 16),
+              Divider(),
+              SizedBox(height: 8),
+              Text(
+                'Need More Help?',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.email, color: AppTheme.primaryColor),
+                title: Text('Email Support'),
+                subtitle: Text('support@cropdiagnostic.com'),
+                dense: true,
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.phone, color: AppTheme.primaryColor),
+                title: Text('Phone Support'),
+                subtitle: Text('+254 700 000 000'),
+                dense: true,
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.schedule, color: AppTheme.primaryColor),
+                title: Text('Support Hours'),
+                subtitle: Text('Mon-Fri: 8:00 AM - 6:00 PM EAT'),
+                dense: true,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }
@@ -340,7 +413,7 @@ class _SectionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryLight.withOpacity(0.2),
+                    color: AppTheme.primaryLight.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -358,6 +431,51 @@ class _SectionCard extends StatelessWidget {
           ...children,
         ],
       ),
+    );
+  }
+}
+
+class _HelpItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+
+  const _HelpItem({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppTheme.primaryColor, size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

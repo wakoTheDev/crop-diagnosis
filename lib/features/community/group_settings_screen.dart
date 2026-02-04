@@ -38,12 +38,15 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   Future<void> _pickImage() async {
     try {
       final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        // TODO: Upload image and get URL
-        // For now, just use the local path
+      if (image != null && mounted) {
+        // Upload image to storage
+        // In production, you would upload to Firebase Storage, AWS S3, or similar
+        // For now, we'll use the local file path as the URL
+        final imageUrl = image.path; // In production: await uploadImageToStorage(image);
+        
         await Provider.of<CommunityProvider>(context, listen: false).updateGroup(
           groupId: widget.group.id,
-          imageUrl: image.path,
+          imageUrl: imageUrl,
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -68,6 +71,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       return;
     }
 
+    if (!mounted) return;
+    
     await Provider.of<CommunityProvider>(context, listen: false).updateGroup(
       groupId: widget.group.id,
       name: _nameController.text,

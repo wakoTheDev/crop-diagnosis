@@ -102,7 +102,7 @@ class CartScreen extends StatelessWidget {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -300,6 +300,8 @@ class CartScreen extends StatelessWidget {
     );
 
     Future.delayed(const Duration(seconds: 2), () {
+      if (!context.mounted) return;
+      
       Navigator.pop(context); // Close loading dialog
       
       showDialog(
@@ -351,7 +353,7 @@ class _CartItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

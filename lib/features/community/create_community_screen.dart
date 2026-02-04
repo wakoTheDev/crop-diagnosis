@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../providers/community_provider.dart';
+import '../../providers/user_provider.dart';
 
 class CreateCommunityScreen extends StatefulWidget {
   const CreateCommunityScreen({super.key});
@@ -32,11 +33,13 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
     });
 
     try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      
       await Provider.of<CommunityProvider>(context, listen: false)
           .createCommunity(
         name: _nameController.text,
         description: _descriptionController.text,
-        createdBy: 'currentUser', // TODO: Replace with actual user ID
+        createdBy: userProvider.currentUserId,
       );
 
       if (mounted) {
@@ -78,7 +81,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryLight.withOpacity(0.3),
+                  color: AppTheme.primaryLight.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -140,21 +143,21 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
 
             // Info card
             Card(
-              color: AppTheme.primaryLight.withOpacity(0.1),
+              color: AppTheme.primaryLight.withValues(alpha: 0.1),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
                         Icon(
                           Icons.info_outline,
                           color: AppTheme.primaryColor,
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
+                        SizedBox(width: 8),
+                        Text(
                           'Community Guidelines',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,

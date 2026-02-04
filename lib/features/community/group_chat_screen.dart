@@ -26,7 +26,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   final ImagePicker _imagePicker = ImagePicker();
 
   bool _isRecording = false;
-  List<MessageAttachment> _pendingAttachments = [];
+  final List<MessageAttachment> _pendingAttachments = [];
 
   @override
   void dispose() {
@@ -294,7 +294,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                                     fit: BoxFit.cover,
                                   )
                                 : Container(
-                                    color: AppTheme.primaryLight.withOpacity(0.2),
+                                    color: AppTheme.primaryLight.withValues(alpha: 0.2),
                                     child: const Icon(
                                       Icons.audiotrack,
                                       color: AppTheme.primaryColor,
@@ -309,7 +309,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           child: GestureDetector(
                             onTap: () => _removeAttachment(index),
                             child: Container(
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: Colors.red,
                                 shape: BoxShape.circle,
                               ),
@@ -333,7 +333,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(0, -2),
                 ),
@@ -484,7 +484,7 @@ class _MessageBubble extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 2,
                   offset: const Offset(0, 1),
                 ),
@@ -513,7 +513,7 @@ class _MessageBubble extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryLight.withOpacity(0.2),
+                          color: AppTheme.primaryLight.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(

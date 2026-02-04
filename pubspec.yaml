@@ -45,6 +45,9 @@ dependencies:
   dio: ^5.4.0
   connectivity_plus: ^5.0.2
   
+  # Environment Variables
+  flutter_dotenv: ^5.1.0
+  
   # Location & Maps
   geolocator: ^10.1.0
   geocoding: ^2.1.1
@@ -60,6 +63,7 @@ dependencies:
   # Localization
   flutter_localizations:
     sdk: flutter
+  intl: ^0.19.0
   
   # Authentication & Security
   firebase_core: ^4.4.0
@@ -121,6 +125,7 @@ flutter:
   
   # Assets
   assets:
+    - .env
     - assets/images/
     - assets/icons/
     - assets/animations/

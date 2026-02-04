@@ -6,8 +6,61 @@ import '../../providers/community_provider.dart';
 import 'community_detail_screen.dart';
 import 'create_community_screen.dart';
 
-class CommunityScreen extends StatelessWidget {
+class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
+
+  @override
+  State<CommunityScreen> createState() => _CommunityScreenState();
+}
+
+class _CommunityScreenState extends State<CommunityScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Search Communities'),
+        content: TextField(
+          controller: _searchController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter community name...',
+            prefixIcon: Icon(Icons.search),
+            border: OutlineInputBorder(),
+          ),
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value.toLowerCase();
+            });
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _searchController.clear();
+              setState(() {
+                _searchQuery = '';
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Clear'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,15 +71,21 @@ class CommunityScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: Implement search
-            },
+            onPressed: _showSearchDialog,
           ),
         ],
       ),
       body: Consumer<CommunityProvider>(
         builder: (context, provider, child) {
-          if (provider.communities.isEmpty) {
+          // Filter communities based on search query
+          final filteredCommunities = _searchQuery.isEmpty
+              ? provider.communities
+              : provider.communities.where((community) {
+                  return community.name.toLowerCase().contains(_searchQuery) ||
+                         community.description.toLowerCase().contains(_searchQuery);
+                }).toList();
+
+          if (filteredCommunities.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -34,7 +93,7 @@ class CommunityScreen extends StatelessWidget {
                   Icon(Icons.groups, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'No communities yet',
+                    _searchQuery.isEmpty ? 'No communities yet' : 'No communities found',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[600],
@@ -43,7 +102,9 @@ class CommunityScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Create your first community',
+                    _searchQuery.isEmpty 
+                        ? 'Create your first community'
+                        : 'Try a different search term',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[500],
@@ -60,9 +121,9 @@ class CommunityScreen extends StatelessWidget {
             },
             child: ListView.builder(
               padding: const EdgeInsets.all(8),
-              itemCount: provider.communities.length,
+              itemCount: filteredCommunities.length,
               itemBuilder: (context, index) {
-                final community = provider.communities[index];
+                final community = filteredCommunities[index];
                 final groupCount = provider.getGroupsForCommunity(community.id).length;
                 final memberCount = community.memberIds.length;
 

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/product_model.dart';
+import '../core/services/logger_service.dart';
 
 class MarketProvider with ChangeNotifier {
   List<Product> _products = [];
@@ -82,8 +83,13 @@ class MarketProvider with ChangeNotifier {
         _products = _getSampleProducts();
         await _saveProducts();
       }
-    } catch (e) {
-      debugPrint('Error loading products: $e');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to load products',
+        tag: 'MarketProvider',
+        error: e,
+        stackTrace: stackTrace,
+      );
       _products = _getSampleProducts();
     }
 
@@ -95,8 +101,13 @@ class MarketProvider with ChangeNotifier {
     try {
       final box = await Hive.openBox('products');
       await box.put('product_list', _products.map((p) => p.toJson()).toList());
-    } catch (e) {
-      debugPrint('Error saving products: $e');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to save products',
+        tag: 'MarketProvider',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -111,8 +122,13 @@ class MarketProvider with ChangeNotifier {
             .toList();
         notifyListeners();
       }
-    } catch (e) {
-      debugPrint('Error loading cart: $e');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to load cart',
+        tag: 'MarketProvider',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -120,8 +136,13 @@ class MarketProvider with ChangeNotifier {
     try {
       final box = await Hive.openBox('cart');
       await box.put('cart_items', _cartItems.map((item) => item.toJson()).toList());
-    } catch (e) {
-      debugPrint('Error saving cart: $e');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to save cart',
+        tag: 'MarketProvider',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 

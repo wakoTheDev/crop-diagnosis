@@ -2,18 +2,21 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../data/models/message_model.dart';
+import 'logger_service.dart';
 
 class AIService {
   final Dio _dio = Dio();
   static const String _baseUrl = 'https://openrouter.ai/api/v1';
-  
-  // OpenRouter API key - Replace with your actual key
-  static const String _apiKey = 'YOUR_OPENROUTER_API_KEY';
-  
+
+  // OpenRouter API key loaded from .env file
+  static String get _apiKey => dotenv.env['OPENROUTER_API_KEY'] ?? '';
+
   // Model optimized for vision and farming expertise
   static const String _model = 'anthropic/claude-3.5-sonnet';
-  
+
   AIService() {
     _dio.options = BaseOptions(
       baseUrl: _baseUrl,
@@ -33,15 +36,37 @@ class AIService {
     required String userMessage,
     required List<Message> conversationHistory,
     List<String>? imagePaths,
+    List<XFile>? imageFiles,
     String? location,
   }) async {
     try {
-      final messages = _buildMessages(
+      logger.debug(
+        'Generating AI response',
+        tag: 'AIService',
+      );
+      logger.debug(
+        'User message: $userMessage, Images: ${imagePaths?.length ?? imageFiles?.length ?? 0}',
+        tag: 'AIService',
+      );
+      
+      final messages = await _buildMessages(
         userMessage: userMessage,
         conversationHistory: conversationHistory,
         imagePaths: imagePaths,
+        imageFiles: imageFiles,
         location: location,
       );
+
+      logger.debug(
+        'Prepared ${messages.length} messages for API',
+        tag: 'AIService',
+      );
+      if (messages.last['content'] is List) {
+        logger.debug(
+          'Multimodal message with ${(messages.last['content'] as List).length} content items',
+          tag: 'AIService',
+        );
+      }
 
       final response = await _dio.post(
         '/chat/completions',
@@ -60,26 +85,34 @@ class AIService {
         throw Exception('Failed to get response: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('DioException: ${e.message}');
-        print('Response: ${e.response?.data}');
+      logger.apiError(
+        '/chat/completions',
+        e,
+        stackTrace: e.stackTrace,
+      );
+      if (e.response?.data != null) {
+        logger.debug('Error response data: ${e.response?.data}', tag: 'AIService');
       }
       return _getErrorResponse(e);
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error: $e');
-      }
+    } catch (e, stackTrace) {
+      logger.error(
+        'Unexpected error in generateResponse',
+        tag: 'AIService',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return 'Sorry, I encountered an error. Please try again.';
     }
   }
 
   /// Build messages array for the API with system prompt and conversation history
-  List<Map<String, dynamic>> _buildMessages({
+  Future<List<Map<String, dynamic>>> _buildMessages({
     required String userMessage,
     required List<Message> conversationHistory,
     List<String>? imagePaths,
+    List<XFile>? imageFiles,
     String? location,
-  }) {
+  }) async {
     final messages = <Map<String, dynamic>>[];
 
     // System prompt with farming expertise instructions
@@ -89,11 +122,18 @@ class AIService {
     });
 
     // Add conversation history (last 10 messages for context)
+    // Exclude the last message if it's a user message since we'll add it with images
     final recentHistory = conversationHistory.length > 10
         ? conversationHistory.sublist(conversationHistory.length - 10)
         : conversationHistory;
 
-    for (final msg in recentHistory) {
+    // Only add history up to the second-to-last message to avoid duplicating
+    // the current user message
+    final historyToAdd = recentHistory.isNotEmpty && recentHistory.last.isUser
+        ? recentHistory.sublist(0, recentHistory.length - 1)
+        : recentHistory;
+
+    for (final msg in historyToAdd) {
       if (msg.text.isNotEmpty && !msg.text.contains('Typing...')) {
         messages.add({
           'role': msg.isUser ? 'user' : 'assistant',
@@ -103,8 +143,12 @@ class AIService {
     }
 
     // Add current user message with images if provided
-    if (imagePaths != null && imagePaths.isNotEmpty) {
-      messages.add(_buildMultimodalMessage(userMessage, imagePaths));
+    if ((imagePaths != null && imagePaths.isNotEmpty) || (imageFiles != null && imageFiles.isNotEmpty)) {
+      logger.debug(
+        'Building multimodal message with ${imagePaths?.length ?? imageFiles?.length ?? 0} images',
+        tag: 'AIService',
+      );
+      messages.add(await _buildMultimodalMessage(userMessage, imagePaths, imageFiles));
     } else {
       messages.add({
         'role': 'user',
@@ -116,13 +160,14 @@ class AIService {
   }
 
   /// Build multimodal message with text and images
-  Map<String, dynamic> _buildMultimodalMessage(
+  Future<Map<String, dynamic>> _buildMultimodalMessage(
     String text,
-    List<String> imagePaths,
-  ) {
+    List<String>? imagePaths,
+    List<XFile>? imageFiles,
+  ) async {
     final content = <Map<String, dynamic>>[];
 
-    // Add text content
+    // Add text content first
     if (text.isNotEmpty) {
       content.add({
         'type': 'text',
@@ -130,24 +175,80 @@ class AIService {
       });
     }
 
-    // Add image contents
-    for (final imagePath in imagePaths) {
-      try {
-        final imageData = _encodeImageToBase64(imagePath);
-        if (imageData != null) {
+    // Handle web images using XFile
+    if (kIsWeb && imageFiles != null) {
+      for (final imageFile in imageFiles) {
+        try {
+          logger.debug('Processing web image: ${imageFile.name}', tag: 'AIService');
+          
+          final bytes = await imageFile.readAsBytes();
+          final base64Image = base64Encode(bytes);
+          final mimeType = _getImageMimeType(imageFile.name);
+          
           content.add({
             'type': 'image_url',
             'image_url': {
-              'url': 'data:image/jpeg;base64,$imageData',
+              'url': 'data:$mimeType;base64,$base64Image',
             },
           });
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print('Error encoding image: $e');
+          
+          logger.debug(
+            'Web image encoded: ${imageFile.name} (${bytes.length} bytes)',
+            tag: 'AIService',
+          );
+        } catch (e, stackTrace) {
+          logger.error(
+            'Failed to encode web image: ${imageFile.name}',
+            tag: 'AIService',
+            error: e,
+            stackTrace: stackTrace,
+          );
         }
       }
     }
+    // Handle mobile/desktop images using file paths
+    else if (imagePaths != null) {
+      for (final imagePath in imagePaths) {
+        try {
+          logger.debug('Processing image: ${imagePath.split('/').last}', tag: 'AIService');
+          
+          final imageData = _encodeImageToBase64(imagePath);
+          if (imageData != null) {
+            // Detect image MIME type from file extension
+            final mimeType = _getImageMimeType(imagePath);
+            
+            content.add({
+              'type': 'image_url',
+              'image_url': {
+                'url': 'data:$mimeType;base64,$imageData',
+              },
+            });
+            
+            logger.debug(
+              'Image encoded: ${imagePath.split('/').last}',
+              tag: 'AIService',
+            );
+          } else {
+            logger.warning(
+              'Failed to encode image (data is null): ${imagePath.split('/').last}',
+              tag: 'AIService',
+            );
+          }
+        } catch (e, stackTrace) {
+          logger.error(
+            'Error encoding image: ${imagePath.split('/').last}',
+            tag: 'AIService',
+            error: e,
+            stackTrace: stackTrace,
+          );
+        }
+      }
+    }
+
+    logger.debug(
+      'Multimodal message built with ${content.length} content items',
+      tag: 'AIService',
+    );
 
     return {
       'role': 'user',
@@ -155,20 +256,59 @@ class AIService {
     };
   }
 
+  /// Get MIME type based on file extension
+  String _getImageMimeType(String imagePath) {
+    final extension = imagePath.toLowerCase().split('.').last;
+    switch (extension) {
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg'; // Default fallback
+    }
+  }
+
   /// Encode image to base64 for API transmission
   String? _encodeImageToBase64(String imagePath) {
     try {
       if (kIsWeb) {
-        // For web, the path is already a network URL
-        return null; // We'll need to handle web images differently
+        // For web, the image picker returns the bytes directly as base64
+        // We need to handle blob URLs differently
+        logger.debug('Web platform: blob URL handling', tag: 'AIService');
+        // On web, we can't read blob URLs directly in Dart
+        // The image should be converted before this point
+        // For now, return null and handle in the calling code
+        return null;
       } else {
-        final bytes = File(imagePath).readAsBytesSync();
+        final file = File(imagePath);
+        if (!file.existsSync()) {
+          logger.warning(
+            'Image file does not exist: ${imagePath.split('/').last}',
+            tag: 'AIService',
+          );
+          return null;
+        }
+        
+        final bytes = file.readAsBytesSync();
+        logger.debug(
+          'Read image file: ${bytes.length} bytes',
+          tag: 'AIService',
+        );
         return base64Encode(bytes);
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error reading image file: $e');
-      }
+    } catch (e, stackTrace) {
+      logger.error(
+        'Error reading image file',
+        tag: 'AIService',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return null;
     }
   }

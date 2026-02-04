@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
@@ -7,10 +8,10 @@ import 'dart:io';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/services/ai_service.dart';
+import '../../core/services/logger_service.dart';
 import '../../data/models/message_model.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/chat_input.dart';
-import '../home/home_screen.dart';
 import '../market/market_screen.dart';
 import '../community/community_screen.dart';
 import '../profile/profile_screen.dart';
@@ -32,6 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isTyping = false;
   bool _isRecording = false;
   final List<String> _attachedImages = [];
+  final List<XFile> _attachedImageFiles = []; // Store XFile objects for web compatibility
   final List<String> _attachedAudioFiles = [];
   final List<String> _attachedFiles = [];
   final AIService _aiService = AIService();
@@ -108,14 +110,38 @@ class _ChatScreenState extends State<ChatScreen> {
       attachedFiles: List.from(_attachedFiles),
     );
 
-    // Save image paths before clearing
+    // Save all attachment paths before clearing
     final imagePaths = List<String>.from(_attachedImages);
+    final imageFiles = List<XFile>.from(_attachedImageFiles);
+    final audioPaths = List<String>.from(_attachedAudioFiles);
+    final filePaths = List<String>.from(_attachedFiles);
+    
+    logger.debug(
+      'Sending message with ${imagePaths.length} images, ${audioPaths.length} audio files, ${filePaths.length} other files',
+      tag: 'ChatScreen',
+    );
+    logger.debug('Message text: "${text.substring(0, text.length > 50 ? 50 : text.length)}${text.length > 50 ? "..." : ""}"', tag: 'ChatScreen');
+    
+    if (imagePaths.isNotEmpty) {
+      for (var i = 0; i < imagePaths.length; i++) {
+        if (!kIsWeb) {
+          final exists = File(imagePaths[i]).existsSync();
+          logger.debug(
+            'Image $i: ${imagePaths[i].split('/').last} (exists: $exists)',
+            tag: 'ChatScreen',
+          );
+        } else {
+          logger.debug('Image $i: ${imagePaths[i]}', tag: 'ChatScreen');
+        }
+      }
+    }
     
     setState(() {
       _messages.add(userMessage);
       _isTyping = true;
       // Clear all inputs
       _attachedImages.clear();
+      _attachedImageFiles.clear();
       _attachedAudioFiles.clear();
       _attachedFiles.clear();
     });
@@ -123,12 +149,27 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.clear();
     _scrollToBottom();
     
+    // Prepare message text for AI
+    String messageForAI = text.trim();
+    
+    // If there are attachments but no text, provide context
+    if (messageForAI.isEmpty) {
+      if (imagePaths.isNotEmpty) {
+        messageForAI = 'Please analyze these images.';
+      } else if (audioPaths.isNotEmpty) {
+        messageForAI = 'I have attached audio files.';
+      } else if (filePaths.isNotEmpty) {
+        messageForAI = 'I have attached files.';
+      }
+    }
+    
     // Get AI response
     try {
       final response = await _aiService.generateResponse(
-        userMessage: text.trim().isNotEmpty ? text.trim() : 'Please analyze this image.',
+        userMessage: messageForAI,
         conversationHistory: _messages,
         imagePaths: imagePaths.isNotEmpty ? imagePaths : null,
+        imageFiles: imageFiles.isNotEmpty ? imageFiles : null,
         location: _currentLocation,
       );
 
@@ -178,6 +219,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (image != null) {
         setState(() {
           _attachedImages.add(image.path);
+          _attachedImageFiles.add(image); // Store XFile for web compatibility
         });
       }
     } catch (e) {
@@ -192,6 +234,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _removeAttachedImage(int index) {
     setState(() {
       _attachedImages.removeAt(index);
+      _attachedImageFiles.removeAt(index);
     });
   }
   

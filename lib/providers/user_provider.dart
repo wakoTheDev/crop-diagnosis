@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../data/models/user_model.dart';
+import '../core/services/logger_service.dart'; 
 
 class UserProvider extends ChangeNotifier {
   UserProfile? _currentUser;
@@ -47,8 +48,13 @@ class UserProvider extends ChangeNotifier {
       }
 
       notifyListeners();
-    } catch (e) {
-      debugPrint('Error loading user data: $e');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to load user data from SharedPreferences',
+        tag: 'UserProvider',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 

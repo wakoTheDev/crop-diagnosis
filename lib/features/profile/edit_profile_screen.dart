@@ -189,21 +189,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             // Info card
             Card(
-              color: AppTheme.primaryLight.withOpacity(0.1),
+              color: AppTheme.primaryLight.withValues(alpha: 0.1),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
                         Icon(
                           Icons.info_outline,
                           color: AppTheme.primaryColor,
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
+                        SizedBox(width: 8),
+                        Text(
                           'Profile Tips',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,

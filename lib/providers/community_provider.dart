@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../data/models/community_model.dart';
+import '../core/services/logger_service.dart';
 
 class CommunityProvider extends ChangeNotifier {
   List<Community> _communities = [];
   List<Group> _groups = [];
   List<Announcement> _announcements = [];
-  Map<String, List<GroupMessage>> _groupMessages = {}; // groupId -> messages
+  final Map<String, List<GroupMessage>> _groupMessages = {}; // groupId -> messages
 
   static const String _communitiesBox = 'communities';
   static const String _groupsBox = 'groups';
@@ -57,8 +58,13 @@ class CommunityProvider extends ChangeNotifier {
       }
 
       notifyListeners();
-    } catch (e) {
-      debugPrint('Error loading community data: $e');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to load community data',
+        tag: 'CommunityProvider',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 

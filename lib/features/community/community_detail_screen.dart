@@ -48,7 +48,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 background: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -63,7 +63,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                           child: Icon(
                             Icons.groups,
                             size: 80,
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                           ),
                         )
                       : Image.network(
@@ -73,7 +73,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                             child: Icon(
                               Icons.groups,
                               size: 80,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                             ),
                           ),
                         ),
@@ -374,10 +374,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                   children: [
                     Row(
                       children: [
-                        CircleAvatar(
+                        const CircleAvatar(
                           radius: 18,
                           backgroundColor: AppTheme.primaryColor,
-                          child: const Icon(
+                          child: Icon(
                             Icons.campaign,
                             color: Colors.white,
                             size: 18,

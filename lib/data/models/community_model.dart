@@ -31,7 +31,7 @@ class Community {
         memberIds = memberIds ?? [],
         groupIds = groupIds ?? [],
         pendingGroupRequests = pendingGroupRequests ?? [],
-        adminIds = adminIds ?? [createdBy ?? 'admin'];
+        adminIds = adminIds ?? [createdBy];
 
   Map<String, dynamic> toJson() {
     return {
@@ -114,7 +114,7 @@ class Group {
   })  : id = id ?? _uuid.v4(),
         createdAt = createdAt ?? DateTime.now(),
         memberIds = memberIds ?? [],
-        adminIds = adminIds ?? [createdBy ?? 'admin'],
+        adminIds = adminIds ?? [createdBy],
         inviteLink = inviteLink ?? 'crop://group/${id ?? _uuid.v4()}';
 
   Map<String, dynamic> toJson() {
