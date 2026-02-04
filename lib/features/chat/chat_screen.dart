@@ -42,23 +42,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _loadInitialMessages();
     _getCurrentLocation();
-  }
-  
-  void _loadInitialMessages() {
-    // Add welcome message
-    setState(() {
-      _messages.add(
-        Message(
-          id: '1',
-          text: 'Hello! I\'m your AI farming assistant. I can help you with:\n\n📸 Crop disease diagnosis from photos\n🐛 Pest identification and control\n🌱 Plant health assessment\n💚 Organic farming solutions\n📍 Location-specific advice\n\nHow can I help you today?',
-          isUser: false,
-          timestamp: DateTime.now(),
-          messageType: MessageType.text,
-        ),
-      );
-    });
   }
   
   Future<void> _getCurrentLocation() async {
@@ -383,27 +367,95 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length + (_isTyping ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _messages.length && _isTyping) {
-                  return ChatBubble(
-                    message: Message(
-                      id: 'typing',
-                      text: 'Typing...',
-                      isUser: false,
-                      timestamp: DateTime.now(),
-                      messageType: MessageType.text,
+            child: _messages.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const CircleAvatar(
+                            radius: 50,
+                            backgroundColor: AppTheme.primaryLight,
+                            child: Icon(
+                              Icons.agriculture,
+                              size: 50,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                          const SizedBox(height: 22),
+                          const Text(
+                            'Farming AI Assistant',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'I can help with:',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildHelpItem(Icons.coronavirus_outlined, 'Sick crops & diseases'),
+                          _buildHelpItem(Icons.bug_report_outlined, 'Pest & insect problems'),
+                          _buildHelpItem(Icons.local_florist_outlined, 'Plant health & growth'),
+                          _buildHelpItem(Icons.eco_outlined, 'Organic farming solutions'),
+                          _buildHelpItem(Icons.location_on_outlined, 'Location-based advice'),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.photo_camera, color: Colors.green, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Take a photo or describe your issue to get started',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    isTyping: true,
-                  );
-                }
-                
-                return ChatBubble(message: _messages[index]);
-              },
-            ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _messages.length + (_isTyping ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _messages.length && _isTyping) {
+                        return ChatBubble(
+                          message: Message(
+                            id: 'typing',
+                            text: 'Typing...',
+                            isUser: false,
+                            timestamp: DateTime.now(),
+                            messageType: MessageType.text,
+                          ),
+                          isTyping: true,
+                        );
+                      }
+                      
+                      return ChatBubble(message: _messages[index]);
+                    },
+                  ),
           ),
           ChatInput(
             controller: _messageController,
@@ -515,5 +567,24 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.dispose();
     _audioRecorder.dispose();
     super.dispose();
+  }
+
+  Widget _buildHelpItem(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.primaryColor, size: 20),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

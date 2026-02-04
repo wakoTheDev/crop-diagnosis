@@ -59,7 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(22),
               child: Column(
                 children: [
                   Row(
@@ -69,7 +69,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       (index) => _buildDot(index),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -132,7 +132,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               color: AppTheme.primaryColor,
             ),
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 33),
           Text(
             page.title,
             style: const TextStyle(
