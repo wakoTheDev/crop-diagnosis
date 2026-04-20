@@ -254,6 +254,11 @@ class GroupMessage {
   final List<MessageAttachment> attachments;
   final DateTime timestamp;
   final bool isRead;
+  final String? replyToMessageId; // ID of message being replied to
+  final String? replyToText; // Text of message being replied to
+  final String? replyToSenderName; // Sender name of message being replied to
+  final List<String> mentionedUserIds; // List of @mentioned user IDs
+  final List<String> mentionedUserNames; // List of @mentioned user names
 
   GroupMessage({
     String? id,
@@ -264,8 +269,15 @@ class GroupMessage {
     List<MessageAttachment>? attachments,
     DateTime? timestamp,
     this.isRead = false,
+    this.replyToMessageId,
+    this.replyToText,
+    this.replyToSenderName,
+    List<String>? mentionedUserIds,
+    List<String>? mentionedUserNames,
   })  : id = id ?? _uuid.v4(),
         attachments = attachments ?? [],
+        mentionedUserIds = mentionedUserIds ?? [],
+        mentionedUserNames = mentionedUserNames ?? [],
         timestamp = timestamp ?? DateTime.now();
 
   Map<String, dynamic> toJson() {
@@ -278,6 +290,11 @@ class GroupMessage {
       'attachments': attachments.map((a) => a.toJson()).toList(),
       'timestamp': timestamp.toIso8601String(),
       'isRead': isRead,
+      'replyToMessageId': replyToMessageId,
+      'replyToText': replyToText,
+      'replyToSenderName': replyToSenderName,
+      'mentionedUserIds': mentionedUserIds,
+      'mentionedUserNames': mentionedUserNames,
     };
   }
 
@@ -293,6 +310,11 @@ class GroupMessage {
           .toList(),
       timestamp: DateTime.parse(json['timestamp']),
       isRead: json['isRead'] ?? false,
+      replyToMessageId: json['replyToMessageId'],
+      replyToText: json['replyToText'],
+      replyToSenderName: json['replyToSenderName'],
+      mentionedUserIds: List<String>.from(json['mentionedUserIds'] ?? []),
+      mentionedUserNames: List<String>.from(json['mentionedUserNames'] ?? []),
     );
   }
 
@@ -308,6 +330,11 @@ class GroupMessage {
       attachments: attachments,
       timestamp: timestamp,
       isRead: isRead ?? this.isRead,
+      replyToMessageId: replyToMessageId,
+      replyToText: replyToText,
+      replyToSenderName: replyToSenderName,
+      mentionedUserIds: mentionedUserIds,
+      mentionedUserNames: mentionedUserNames,
     );
   }
 }

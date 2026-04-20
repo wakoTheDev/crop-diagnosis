@@ -15,7 +15,7 @@ class AIService {
   static String get _apiKey => dotenv.env['OPENROUTER_API_KEY'] ?? '';
 
   // Model optimized for vision and farming expertise
-  static const String _model = 'anthropic/claude-3.5-sonnet';
+  static const String _model = 'anthropic/claude-3.7-sonnet';
 
   AIService() {
     _dio.options = BaseOptions(

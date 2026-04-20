@@ -286,6 +286,11 @@ class CommunityProvider extends ChangeNotifier {
     required String senderName,
     required String text,
     List<MessageAttachment>? attachments,
+    String? replyToMessageId,
+    String? replyToText,
+    String? replyToSenderName,
+    List<String>? mentionedUserIds,
+    List<String>? mentionedUserNames,
   }) async {
     final message = GroupMessage(
       groupId: groupId,
@@ -293,6 +298,11 @@ class CommunityProvider extends ChangeNotifier {
       senderName: senderName,
       text: text,
       attachments: attachments,
+      replyToMessageId: replyToMessageId,
+      replyToText: replyToText,
+      replyToSenderName: replyToSenderName,
+      mentionedUserIds: mentionedUserIds,
+      mentionedUserNames: mentionedUserNames,
     );
 
     if (!_groupMessages.containsKey(groupId)) {
